@@ -1,84 +1,42 @@
-// components/property/ReviewSection.tsx
-import { useEffect, useState } from "react";
-import api from "../../lib/api";
+﻿import React, { useEffect, useState } from "react";
+import { PropertyProps } from "@/interfaces";
+import api from "@/lib/api";
+import Image from "next/image";
 
-type Review = {
-  id: string | number;
-  author?: string;
-  rating?: number;
-  comment?: string;
-  createdAt?: string;
-};
-
-export default function ReviewSection({ propertyId }: { propertyId: string | number }) {
-  const [reviews, setReviews] = useState<Review[]>([]);
+const PropertyDetail: React.FC<{ id: string }> = ({ id }) => {
+  const [property, setProperty] = useState<PropertyProps | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!propertyId) return;
-
-    let cancelled = false;
-
-    async function fetchReviews() {
+    const fetchProperty = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        // Primary attempt
-        try {
-          const res = await api.get<Review[]>(`/properties/${propertyId}/reviews`);
-          if (!cancelled) {
-            setReviews(Array.isArray(res.data) ? res.data : []);
-            return;
-          }
-        } catch (err) {
-          // Try fallback below
-        }
-
-        // Fallback for json-server
-        try {
-          const res2 = await api.get<Review[]>(`/reviews?propertyId=${propertyId}`);
-          if (!cancelled) {
-            setReviews(Array.isArray(res2.data) ? res2.data : []);
-            return;
-          }
-        } catch (err2) {
-          if (!cancelled) setError("Failed to load reviews");
-        }
-      } catch (err: any) {
-        if (!cancelled) setError(err?.message ?? "Failed to load reviews");
+        const res = await api.get(`/properties/${id}`);
+        setProperty(res.data);
+      } catch (_err: unknown) {
+        const message = _err instanceof Error ? _err.message : String(_err);
+        console.error("Failed to fetch property:", message);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
-    }
-
-    fetchReviews();
-    return () => {
-      cancelled = true;
     };
-  }, [propertyId]);
+    fetchProperty();
+  }, [id]);
 
-  if (loading) return <div className="p-2 text-sm text-gray-600">Loading reviews…</div>;
-  if (error) return <div className="p-2 text-sm text-red-600">Error loading reviews: {error}</div>;
-  if (reviews.length === 0) return <div className="p-2 text-sm text-gray-500">No reviews yet.</div>;
+  if (loading) return <p>Loading...</p>;
+  if (!property) return <p>Property not found.</p>;
+
+  const img = property.images && property.images.length > 0 ? property.images[0] : property.image ?? "/images/placeholder.png";
 
   return (
-    <div className="space-y-3">
-      {reviews.map((r) => (
-        <div key={r.id} className="border rounded p-3 bg-white">
-          <div className="flex justify-between items-center">
-            <strong>{r.author ?? "Anonymous"}</strong>
-            <span className="text-sm text-gray-600">{r.rating ?? "-"}/5</span>
-          </div>
-          {r.comment && <p className="mt-2 text-sm text-gray-700">{r.comment}</p>}
-          {r.createdAt && (
-            <div className="mt-1 text-xs text-gray-400">
-              {new Date(r.createdAt).toLocaleString()}
-            </div>
-          )}
-        </div>
-      ))}
+    <div className="property-detail">
+      <div style={{ width: "100%", height: 400, position: "relative" }}>
+        <Image src={img} alt={property.name} fill style={{ objectFit: "cover" }} sizes="100vw" />
+      </div>
+      <h1>{property.name}</h1>
+      <p>{property.description}</p>
+      <p>Price: {property.price ?? "N/A"}</p>
     </div>
   );
-}
+};
+
+export default PropertyDetail;

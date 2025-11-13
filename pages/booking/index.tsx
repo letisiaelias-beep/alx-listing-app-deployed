@@ -19,7 +19,7 @@ export default function BookingPage() {
     <div className="container mx-auto p-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <BookingForm />
+          <BookingForm propertyId="placeholder-id" />
           <CancellationPolicy />
         </div>
 

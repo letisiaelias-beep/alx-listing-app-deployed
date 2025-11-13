@@ -1,51 +1,50 @@
-import { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
+import type { NextPage } from "next";
 import api from "@/lib/api";
-import PropertyCard from "../components/property/PropertyCard";
+import { PropertyProps } from "@/interfaces";
+import PropertyCard from "@/components/property/PropertyCard";
 
-type Property = {
-  id: string | number;
-  title: string;
-  price?: number;
-  location?: string;
-  images?: string[];
-  shortDescription?: string;
-};
-
-export default function Home() {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const Home: NextPage = () => {
+  const [properties, setProperties] = useState<PropertyProps[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function fetchProperties() {
+    const fetchData = async () => {
       try {
-        setLoading(true);
-        setError(null);
-        const resp = await api.get<Property[]>("/properties");
-        if (!cancelled) setProperties(resp.data || []);
-      } catch (err: any) {
-        console.error("Error fetching properties:", err);
-        if (!cancelled) setError(err?.message || "Failed to load properties");
+        const res = await api.get("/properties");
+        // assume API returns array; do a runtime check
+        const data = res?.data;
+        if (Array.isArray(data)) {
+          setProperties(data as PropertyProps[]);
+        } else {
+          console.warn("Unexpected properties response:", data);
+          setProperties([]);
+        }
+      } catch (_err: unknown) {
+        const msg = _err instanceof Error ? _err.message : String(_err);
+        console.error("Failed to load properties:", msg);
+        setProperties([]);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
-    }
-
-    fetchProperties();
-    return () => { cancelled = true; };
+    };
+    fetchData();
   }, []);
 
-  if (loading) return <div className="p-8 text-center">Loading properties…</div>;
-  if (error) return <div className="p-8 text-center text-red-600">Error: {error}</div>;
-  if (properties.length === 0) return <div className="p-8 text-center">No properties found.</div>;
+  if (loading) return <p>Loading properties...</p>;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
-      {properties.map((property) => (
-        <PropertyCard key={property.id} property={property} />
-      ))}
-    </div>
+    <main>
+      <h1>Property Listings</h1>
+      <div style={{ display: "grid", gap: 12 }}>
+        {properties.length === 0 ? (
+          <p>No properties available.</p>
+        ) : (
+          properties.map((p) => <PropertyCard key={String(p.id)} property={p} />)
+        )}
+      </div>
+    </main>
   );
-}
+};
+
+export default Home;

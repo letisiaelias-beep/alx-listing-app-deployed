@@ -1,38 +1,25 @@
-import Link from "next/link";
+﻿import React from "react";
+import Image from "next/image";
+import { PropertyProps } from "@/interfaces";
 
-type Property = {
-  id: string | number;
-  title: string;
-  price?: number;
-  location?: string;
-  images?: string[];
-  shortDescription?: string;
+type Props = {
+  property: PropertyProps;
 };
 
-export default function PropertyCard({ property }: { property: Property }) {
-  const imageUrl = property.images?.[0] ?? "/placeholder.jpg";
+const PropertyCard: React.FC<Props> = ({ property }) => {
+  const img = property.images && property.images.length > 0 ? property.images[0] : property.image ?? "/images/placeholder.png";
 
   return (
-    <div className="rounded-lg shadow-sm overflow-hidden bg-white">
-      <Link href={`/properties/${property.id}`}>
-        <a>
-          <div className="h-48 w-full overflow-hidden">
-            <img src={imageUrl} alt={property.title} className="w-full h-full object-cover" />
-          </div>
-        </a>
-      </Link>
-
-      <div className="p-4">
-        <h3 className="text-lg font-semibold">{property.title}</h3>
-        {property.location && <p className="text-sm text-gray-500">{property.location}</p>}
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-md font-medium">
-            {property.price ? `$${property.price}` : "Price on request"}
-          </span>
-          <Link href={`/properties/${property.id}`}><a className="text-sm underline">View</a></Link>
-        </div>
-        {property.shortDescription && <p className="mt-2 text-sm text-gray-600">{property.shortDescription}</p>}
+    <div className="property-card">
+      <div className="thumb" style={{ width: "100%", height: 200, position: "relative" }}>
+        <Image src={img} alt={property.name} fill style={{ objectFit: "cover" }} sizes="100vw" />
+      </div>
+      <div className="info">
+        <h4>{property.name}</h4>
+        <p>{property.location?.city ?? property.location?.address ?? "Unknown location"}</p>
       </div>
     </div>
   );
-}
+};
+
+export default PropertyCard;

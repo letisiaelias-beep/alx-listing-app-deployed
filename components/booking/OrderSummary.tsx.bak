@@ -1,0 +1,32 @@
+// components/booking/OrderSummary.tsx
+import React from "react";
+// (other imports)
+
+type OrderSummaryProps = {
+  // add the real props shape if known
+  total: number;
+};
+
+const OrderSummary: React.FC<OrderSummaryProps> = ({ total }) => {
+  // ...component code
+
+  const submitOrder = async () => {
+    try {
+      // ...submit logic
+    } catch (err: unknown) {
+      // narrow unknown -> Error safely
+      const message = err instanceof Error ? err.message : String(err);
+      console.error("Order submission failed:", message);
+    }
+  };
+
+  return (
+    <div>
+      {/* component JSX */}
+      <p>Total: {total}</p>
+      <button onClick={submitOrder}>Place order</button>
+    </div>
+  );
+};
+
+export default OrderSummary;
